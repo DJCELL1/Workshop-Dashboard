@@ -62,8 +62,8 @@ UPCOMING_DAYS = 30
 TIMEZONE_DISPLAY = 'Pacific/Auckland'
 
 # Auto-refresh settings
-# The page will automatically refresh once daily at this hour (24-hour format)
-AUTO_REFRESH_HOUR = 18  # 6pm
+# The page will automatically refresh every X hours
+AUTO_REFRESH_HOURS = 12  # Refresh every 12 hours
 
 # Distribution Branch filter - only show orders for this distribution branch
 # Using ID is more reliable than name matching
@@ -1025,36 +1025,37 @@ def inject_custom_css():
 # AUTO-REFRESH FUNCTIONS
 # =============================================================================
 
-def check_daily_refresh():
+def check_periodic_refresh():
     """
-    Check if we should trigger a daily refresh at the configured hour.
+    Check if we should trigger a periodic refresh based on AUTO_REFRESH_HOURS.
     Uses session state to track when the last refresh was triggered.
     """
     tz = pytz.timezone(TIMEZONE_DISPLAY)
     now = datetime.now(tz)
-    current_hour = now.hour
-    current_date = now.date()
 
     # Initialize session state for tracking refresh
-    if 'last_daily_refresh_date' not in st.session_state:
-        st.session_state.last_daily_refresh_date = None
+    if 'last_refresh_time' not in st.session_state:
+        st.session_state.last_refresh_time = now
 
-    # Check if it's the refresh hour and we haven't refreshed today
-    if current_hour == AUTO_REFRESH_HOUR:
-        if st.session_state.last_daily_refresh_date != current_date:
-            # Mark that we've refreshed today
-            st.session_state.last_daily_refresh_date = current_date
-            # Clear the cache to force fresh data
-            st.cache_data.clear()
-            st.rerun()
+    # Calculate hours since last refresh
+    time_since_refresh = now - st.session_state.last_refresh_time
+    hours_since_refresh = time_since_refresh.total_seconds() / 3600
+
+    # Check if enough time has passed for a refresh
+    if hours_since_refresh >= AUTO_REFRESH_HOURS:
+        # Update the last refresh time
+        st.session_state.last_refresh_time = now
+        # Clear the cache to force fresh data
+        st.cache_data.clear()
+        st.rerun()
 
 
 def setup_auto_refresh_check():
     """
-    Set up a meta refresh tag to periodically check if it's time for daily refresh.
+    Set up a meta refresh tag to periodically check if it's time for a refresh.
     This ensures the page checks every few minutes even if left open.
     """
-    # Refresh the page every 5 minutes to check if it's 6pm
+    # Refresh the page every 5 minutes to check if refresh interval has passed
     st.markdown(
         '<meta http-equiv="refresh" content="300">',
         unsafe_allow_html=True
@@ -2014,11 +2015,11 @@ def main():
     """Main application entry point."""
     inject_custom_css()
 
-    # Set up auto-refresh check (page will refresh every 5 minutes to check for 6pm)
+    # Set up auto-refresh check (page will refresh every 5 minutes to check interval)
     setup_auto_refresh_check()
 
-    # Check if it's time for the daily 6pm refresh
-    check_daily_refresh()
+    # Check if it's time for a periodic refresh (every 12 hours)
+    check_periodic_refresh()
 
     # Test API connection first (in debug mode)
     if DEBUG_MODE:
