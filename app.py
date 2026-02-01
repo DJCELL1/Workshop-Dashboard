@@ -61,6 +61,10 @@ UPCOMING_DAYS = 30
 # Timezone for display
 TIMEZONE_DISPLAY = 'Pacific/Auckland'
 
+# Auto-refresh settings
+# The page will automatically refresh once daily at this hour (24-hour format)
+AUTO_REFRESH_HOUR = 18  # 6pm
+
 # Distribution Branch filter - only show orders for this distribution branch
 # Using ID is more reliable than name matching
 DISTRIBUTION_BRANCH_ID = 6877  # Locksmiths
@@ -1018,6 +1022,46 @@ def inject_custom_css():
 
 
 # =============================================================================
+# AUTO-REFRESH FUNCTIONS
+# =============================================================================
+
+def check_daily_refresh():
+    """
+    Check if we should trigger a daily refresh at the configured hour.
+    Uses session state to track when the last refresh was triggered.
+    """
+    tz = pytz.timezone(TIMEZONE_DISPLAY)
+    now = datetime.now(tz)
+    current_hour = now.hour
+    current_date = now.date()
+
+    # Initialize session state for tracking refresh
+    if 'last_daily_refresh_date' not in st.session_state:
+        st.session_state.last_daily_refresh_date = None
+
+    # Check if it's the refresh hour and we haven't refreshed today
+    if current_hour == AUTO_REFRESH_HOUR:
+        if st.session_state.last_daily_refresh_date != current_date:
+            # Mark that we've refreshed today
+            st.session_state.last_daily_refresh_date = current_date
+            # Clear the cache to force fresh data
+            st.cache_data.clear()
+            st.rerun()
+
+
+def setup_auto_refresh_check():
+    """
+    Set up a meta refresh tag to periodically check if it's time for daily refresh.
+    This ensures the page checks every few minutes even if left open.
+    """
+    # Refresh the page every 5 minutes to check if it's 6pm
+    st.markdown(
+        '<meta http-equiv="refresh" content="300">',
+        unsafe_allow_html=True
+    )
+
+
+# =============================================================================
 # API FUNCTIONS
 # =============================================================================
 
@@ -1969,6 +2013,12 @@ def test_api_connection() -> bool:
 def main():
     """Main application entry point."""
     inject_custom_css()
+
+    # Set up auto-refresh check (page will refresh every 5 minutes to check for 6pm)
+    setup_auto_refresh_check()
+
+    # Check if it's time for the daily 6pm refresh
+    check_daily_refresh()
 
     # Test API connection first (in debug mode)
     if DEBUG_MODE:
