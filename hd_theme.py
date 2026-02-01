@@ -23,7 +23,7 @@ def apply_hd_theme():
 
         /* Orange Primary Buttons */
         .stButton>button {
-            background-color: #F47920;
+            background-color: #f69000;
             color: white;
             border-radius: 8px;
             font-weight: 600;
@@ -34,7 +34,7 @@ def apply_hd_theme():
         }
 
         .stButton>button:hover {
-            background-color: #D86A1A;
+            background-color: #f6c624;
             box-shadow: 0 4px 8px rgba(244, 121, 32, 0.3);
             transform: translateY(-1px);
         }
@@ -48,7 +48,7 @@ def apply_hd_theme():
 
         /* Dark Section Cards */
         .dark-card {
-            background: linear-gradient(135deg, #2B2B2B 0%, #1A1A1A 100%);
+            background: linear-gradient(135deg, #11222c 0%, #1c5858 100%);
             padding: 2rem;
             border-radius: 12px;
             color: white;
@@ -58,7 +58,7 @@ def apply_hd_theme():
 
         /* Orange Accent Cards */
         .orange-card {
-            background: linear-gradient(135deg, #F47920 0%, #D86A1A 100%);
+            background: linear-gradient(135deg, #f69000 0%, #f6c624 100%);
             padding: 1.5rem;
             border-radius: 12px;
             color: white;
@@ -72,12 +72,12 @@ def apply_hd_theme():
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #F47920;
+            border-left: 4px solid #f69000;
             margin: 0.5rem 0;
         }
 
         .metric-card h3 {
-            color: #2B2B2B;
+            color: #11222c;
             font-size: 2rem;
             margin: 0;
             font-weight: 700;
@@ -91,26 +91,26 @@ def apply_hd_theme():
 
         /* Headers with Orange Accent */
         h1 {
-            color: #2B2B2B;
+            color: #11222c;
             font-weight: 700;
         }
 
         h2 {
-            color: #2B2B2B;
+            color: #11222c;
             font-weight: 600;
-            border-bottom: 3px solid #F47920;
+            border-bottom: 3px solid #f69000;
             padding-bottom: 0.5rem;
             margin-top: 2rem;
         }
 
         h3 {
-            color: #2B2B2B;
+            color: #11222c;
             font-weight: 600;
         }
 
         /* Sidebar Styling */
         [data-testid="stSidebar"] {
-            background-color: #2B2B2B;
+            background-color: #11222c;
         }
 
         [data-testid="stSidebar"] h1,
@@ -144,14 +144,14 @@ def apply_hd_theme():
         .stTextInput>div>div>input:focus,
         .stSelectbox>div>div>select:focus,
         .stDateInput>div>div>input:focus {
-            border-color: #F47920;
+            border-color: #f69000;
             box-shadow: 0 0 0 2px rgba(244, 121, 32, 0.1);
         }
 
         /* Success/Error Messages */
         .stSuccess {
             background-color: #D4EDDA;
-            border-left: 4px solid #28A745;
+            border-left: 4px solid #53b1b1;
             border-radius: 6px;
         }
 
@@ -163,13 +163,13 @@ def apply_hd_theme():
 
         .stWarning {
             background-color: #FFF3CD;
-            border-left: 4px solid #FFC107;
+            border-left: 4px solid #f6c624;
             border-radius: 6px;
         }
 
         .stInfo {
             background-color: #D1ECF1;
-            border-left: 4px solid #F47920;
+            border-left: 4px solid #f69000;
             border-radius: 6px;
         }
 
@@ -182,7 +182,7 @@ def apply_hd_theme():
 
         /* File Uploader */
         [data-testid="stFileUploader"] {
-            border: 2px dashed #F47920;
+            border: 2px dashed #f69000;
             border-radius: 12px;
             padding: 2rem;
             background-color: #FFF8F4;
@@ -190,7 +190,7 @@ def apply_hd_theme():
 
         /* Orange Accent Text Class */
         .orange-text {
-            color: #F47920;
+            color: #f69000;
             font-weight: 600;
         }
 
@@ -205,13 +205,13 @@ def apply_hd_theme():
         }
 
         .badge-success {
-            background-color: #28A745;
+            background-color: #53b1b1;
             color: white;
         }
 
         .badge-warning {
-            background-color: #FFC107;
-            color: #2B2B2B;
+            background-color: #f6c624;
+            color: #11222c;
         }
 
         .badge-danger {
@@ -220,7 +220,7 @@ def apply_hd_theme():
         }
 
         .badge-orange {
-            background-color: #F47920;
+            background-color: #f69000;
             color: white;
         }
     </style>
@@ -298,7 +298,7 @@ def add_logo(logo_path=None, text="Hardware Direct", subtitle="ProMaster Importe
                 <div style="
                     width: 12px;
                     height: 12px;
-                    background: #F47920;
+                    background: #f69000;
                     border-radius: 50%;
                 "></div>
                 <h2 style="

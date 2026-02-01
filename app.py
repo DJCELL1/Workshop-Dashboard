@@ -26,16 +26,17 @@ from hd_theme import apply_hd_theme, add_logo, metric_card, badge
 
 # Hardware Direct Theme Colors
 HDL_THEME = {
-    "primary": "#2B2B2B",      # Dark gray (Hardware Direct)
-    "accent": "#F47920",       # Hardware Direct orange
+    "primary": "#11222c",      # Dark navy
+    "secondary": "#1c5858",    # Dark teal
+    "accent": "#f69000",       # HDL Orange
     "background": "#F5F7FA",   # Light gray background
     "card": "#FFFFFF",         # White cards
     "overdue": "#DC3545",      # Red for overdue
-    "dueSoon": "#FFC107",      # Amber for due soon
-    "ok": "#28A745",           # Green for on track
-    "noDate": "#6C757D",       # Gray for no date
-    "text": "#212529",         # Dark text
-    "textLight": "#6C757D",    # Light text
+    "dueSoon": "#f6c624",      # Yellow/gold for due soon
+    "ok": "#53b1b1",           # Teal for on track/positive
+    "noDate": "#1c5858",       # Dark teal for no date
+    "text": "#11222c",         # Dark navy text
+    "textLight": "#1c5858",    # Teal light text
 }
 
 # Stages we WANT to see (jobs in progress)
@@ -71,6 +72,11 @@ API_MAX_RETRIES = 3
 API_RETRY_DELAY = 1.0
 DEBUG_MODE = False  # Set to True to show API debug info in sidebar
 
+# Cin7 Web App URL for linking to Sales Orders
+# Format: https://go.cin7.com/Cloud/TransactionEntry/TransactionEntry.aspx?idCustomerAppsLink={}&OrderId={ID}
+CIN7_WEB_URL_BASE = "https://go.cin7.com/Cloud/TransactionEntry/TransactionEntry.aspx"
+CIN7_CUSTOMER_APPS_LINK = "767392"  # Your Cin7 customer apps link ID
+
 # Fields to request from Sales Orders
 SALES_ORDER_FIELDS = [
     "Id", "Reference", "ProjectName", "Company",
@@ -91,6 +97,18 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Hide sidebar completely
+st.markdown("""
+<style>
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Apply Hardware Direct theme
 apply_hd_theme()
@@ -116,11 +134,20 @@ def inject_custom_css():
 
         /* Header bar */
         .header-bar {{
-            background: linear-gradient(135deg, {HDL_THEME['primary']} 0%, #2C4F7C 100%);
+            background: linear-gradient(135deg, {HDL_THEME['accent']} 0%, {HDL_THEME['dueSoon']} 100%);
             padding: 1.5rem 2rem;
             border-radius: 12px;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(244, 121, 32, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }}
+
+        .header-logo {{
+            height: 60px;
+            width: auto;
+            border-radius: 8px;
         }}
 
         .header-title {{
@@ -235,11 +262,11 @@ def inject_custom_css():
         }}
 
         .column-due-soon .column-title {{
-            color: {HDL_THEME['dueSoon']};
+            color: {HDL_THEME['accent']};
         }}
         .column-due-soon .column-count {{
-            background: {HDL_THEME['dueSoon']};
-            color: {HDL_THEME['text']};
+            background: {HDL_THEME['accent']};
+            color: white;
         }}
 
         .column-on-track .column-title {{
@@ -258,12 +285,130 @@ def inject_custom_css():
             color: white;
         }}
 
-        /* Currently Working On section */
+        /* Currently Working On section - Green */
         .working-on-section {{
-            background: linear-gradient(135deg, {HDL_THEME['primary']} 0%, #2C4F7C 100%);
+            background: linear-gradient(135deg, {HDL_THEME['ok']} 0%, #3d8a8a 100%);
             border-radius: 12px;
             padding: 1rem 1.5rem;
             margin-bottom: 1.5rem;
+        }}
+
+        /* Overdue section - Red */
+        .overdue-section {{
+            background: linear-gradient(135deg, {HDL_THEME['overdue']} 0%, #C82333 100%);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .overdue-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }}
+
+        .overdue-title {{
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+
+        .overdue-count {{
+            background: white;
+            color: {HDL_THEME['overdue']};
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }}
+
+        .overdue-cards {{
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }}
+
+        .overdue-cards::-webkit-scrollbar {{
+            height: 6px;
+        }}
+
+        .overdue-cards::-webkit-scrollbar-track {{
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }}
+
+        .overdue-cards::-webkit-scrollbar-thumb {{
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+        }}
+
+        .overdue-cards .job-card {{
+            flex: 0 0 280px;
+            margin-bottom: 0;
+        }}
+
+        /* Needs ETD section */
+        .needs-etd-section {{
+            background: linear-gradient(135deg, {HDL_THEME['noDate']} 0%, {HDL_THEME['primary']} 100%);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .needs-etd-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }}
+
+        .needs-etd-title {{
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+
+        .needs-etd-count {{
+            background: {HDL_THEME['accent']};
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }}
+
+        .needs-etd-cards {{
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }}
+
+        .needs-etd-cards::-webkit-scrollbar {{
+            height: 6px;
+        }}
+
+        .needs-etd-cards::-webkit-scrollbar-track {{
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }}
+
+        .needs-etd-cards::-webkit-scrollbar-thumb {{
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+        }}
+
+        .needs-etd-cards .job-card {{
+            flex: 0 0 280px;
+            margin-bottom: 0;
         }}
 
         .working-on-header {{
@@ -317,6 +462,17 @@ def inject_custom_css():
             margin-bottom: 0;
         }}
 
+        /* Job card links */
+        .job-card-link {{
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }}
+
+        .job-card-link:hover {{
+            text-decoration: none;
+        }}
+
         /* Job cards */
         .job-card {{
             background: {HDL_THEME['card']};
@@ -330,7 +486,8 @@ def inject_custom_css():
 
         .job-card:hover {{
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: {HDL_THEME['accent']};
         }}
 
         .job-card.overdue {{
@@ -500,6 +657,43 @@ def inject_custom_css():
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
 
+        /* Tab styling */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            background: {HDL_THEME['card']};
+            padding: 0.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }}
+
+        .stTabs [data-baseweb="tab"] {{
+            height: 50px;
+            padding: 0 24px;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: {HDL_THEME['textLight']};
+        }}
+
+        .stTabs [data-baseweb="tab"]:hover {{
+            background: {HDL_THEME['background']};
+            color: {HDL_THEME['primary']};
+        }}
+
+        .stTabs [aria-selected="true"] {{
+            background: {HDL_THEME['accent']} !important;
+            color: white !important;
+        }}
+
+        .stTabs [data-baseweb="tab-highlight"] {{
+            display: none;
+        }}
+
+        .stTabs [data-baseweb="tab-border"] {{
+            display: none;
+        }}
+
         /* Adjust column gaps */
         .stColumns > div {{
             padding: 0 0.5rem;
@@ -520,6 +714,305 @@ def inject_custom_css():
             background: #2C4F7C;
             color: white;
         }}
+
+        /* =====================================================
+           TV VIEW STYLES - Optimized for 50" TV display
+           Single screen, no scrolling, large readable text
+           ===================================================== */
+
+        /* TV Container - uses viewport height */
+        .tv-container {{
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem;
+        }}
+
+        /* TV Header - compact */
+        .tv-header {{
+            background: linear-gradient(135deg, {HDL_THEME['primary']} 0%, {HDL_THEME['secondary']} 100%);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .tv-header-left {{
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }}
+
+        .tv-logo {{
+            height: 60px;
+            width: auto;
+            border-radius: 6px;
+        }}
+
+        .tv-title {{
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }}
+
+        .tv-time {{
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: right;
+        }}
+
+        .tv-date {{
+            color: rgba(255,255,255,0.8);
+            font-size: 1rem;
+            text-align: right;
+        }}
+
+        /* TV KPI Cards - Row at top */
+        .tv-kpi-container {{
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }}
+
+        .tv-kpi-card {{
+            flex: 1;
+            background: {HDL_THEME['card']};
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-bottom: 6px solid {HDL_THEME['accent']};
+        }}
+
+        .tv-kpi-card.overdue {{
+            border-bottom-color: {HDL_THEME['overdue']};
+        }}
+
+        .tv-kpi-card.queue {{
+            border-bottom-color: {HDL_THEME['accent']};
+        }}
+
+        .tv-kpi-card.workshop {{
+            border-bottom-color: {HDL_THEME['ok']};
+        }}
+
+        .tv-kpi-value {{
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+        }}
+
+        .tv-kpi-card.overdue .tv-kpi-value {{
+            color: {HDL_THEME['overdue']};
+        }}
+
+        .tv-kpi-card.queue .tv-kpi-value {{
+            color: {HDL_THEME['accent']};
+        }}
+
+        .tv-kpi-card.workshop .tv-kpi-value {{
+            color: {HDL_THEME['ok']};
+        }}
+
+        .tv-kpi-label {{
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: {HDL_THEME['primary']};
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.25rem;
+        }}
+
+        /* TV Board - 3 column grid layout */
+        .tv-board {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            flex: 1;
+        }}
+
+        /* TV Section/Column */
+        .tv-section {{
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .tv-section.overdue {{
+            background: linear-gradient(135deg, {HDL_THEME['overdue']} 0%, #C82333 100%);
+        }}
+
+        .tv-section.workshop {{
+            background: linear-gradient(135deg, {HDL_THEME['ok']} 0%, #3d8a8a 100%);
+        }}
+
+        .tv-section.queue {{
+            background: {HDL_THEME['accent']};
+        }}
+
+        .tv-section-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }}
+
+        .tv-section-title {{
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }}
+
+        .tv-section-count {{
+            background: white;
+            color: {HDL_THEME['primary']};
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }}
+
+        .tv-section.overdue .tv-section-count {{
+            color: {HDL_THEME['overdue']};
+        }}
+
+        .tv-section.workshop .tv-section-count {{
+            color: {HDL_THEME['ok']};
+        }}
+
+        .tv-section.queue .tv-section-count {{
+            color: {HDL_THEME['accent']};
+        }}
+
+        /* TV Cards container - vertical stack */
+        .tv-cards-column {{
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }}
+
+        /* TV Job Cards - Readable from distance */
+        .tv-job-card {{
+            background: white;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }}
+
+        .tv-job-card.overdue {{
+            border-left: 6px solid {HDL_THEME['overdue']};
+        }}
+
+        .tv-job-card.due-soon {{
+            border-left: 6px solid {HDL_THEME['accent']};
+        }}
+
+        .tv-job-card.on-track {{
+            border-left: 6px solid {HDL_THEME['ok']};
+        }}
+
+        .tv-job-reference {{
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: {HDL_THEME['primary']};
+            margin-bottom: 0.2rem;
+        }}
+
+        .tv-job-project {{
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: {HDL_THEME['text']};
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+
+        .tv-job-company {{
+            font-size: 1rem;
+            color: {HDL_THEME['textLight']};
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+
+        .tv-job-date {{
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 0.4rem;
+        }}
+
+        .tv-job-date.overdue {{
+            background: {HDL_THEME['overdue']};
+            color: white;
+        }}
+
+        .tv-job-date.due-soon {{
+            background: {HDL_THEME['dueSoon']};
+            color: {HDL_THEME['primary']};
+        }}
+
+        .tv-job-date.on-track {{
+            background: {HDL_THEME['ok']};
+            color: white;
+        }}
+
+        /* TV Empty state */
+        .tv-empty {{
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 1.3rem;
+        }}
+
+        /* More jobs indicator */
+        .tv-more-jobs {{
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }}
+
+        /* Legacy horizontal scroll row - kept for compatibility */
+        .tv-cards-row {{
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }}
+
+        /* TV Empty state - legacy */
+        .tv-empty-legacy {{
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 1.5rem;
+        }}
+
+        /* Auto-refresh indicator */
+        .tv-refresh-indicator {{
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: {HDL_THEME['primary']};
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }}
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -904,17 +1397,31 @@ def parse_date(date_value: Any) -> Optional[datetime]:
 # =============================================================================
 
 def render_header():
-    """Render the main header bar."""
+    """Render the main header bar with logo."""
     tz = pytz.timezone(TIMEZONE_DISPLAY)
     now = datetime.now(tz)
 
+    # Try to load the logo, use a placeholder if not found
+    import base64
+    import os
+
+    logo_html = ""
+    logo_path = "Logos-01.jpg"
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            logo_data = base64.b64encode(f.read()).decode()
+        logo_html = f'<img src="data:image/jpeg;base64,{logo_data}" class="header-logo" alt="Hardware Direct">'
+
     st.markdown(f"""
     <div class="header-bar">
-        <h1 class="header-title">
-            🔧 HDL {DISTRIBUTION_BRANCH_NAME} Workshop Board
-        </h1>
-        <div class="header-subtitle">
-            Last updated: {now.strftime('%d %b %Y %H:%M %Z')}
+        {logo_html}
+        <div>
+            <h1 class="header-title">
+                HDL {DISTRIBUTION_BRANCH_NAME} Workshop Board
+            </h1>
+            <div class="header-subtitle">
+                Last updated: {now.strftime('%d %b %Y %H:%M %Z')}
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -926,12 +1433,10 @@ def render_kpi_cards(df: pd.DataFrame):
         total_jobs = 0
         overdue_count = 0
         due_soon_count = 0
-        on_track_count = 0
     else:
         total_jobs = len(df)
         overdue_count = df["IsOverdue"].sum()
         due_soon_count = df["IsDueSoon"].sum()
-        on_track_count = df["IsOnTrack"].sum()
 
     st.markdown(f"""
     <div class="kpi-container">
@@ -946,10 +1451,6 @@ def render_kpi_cards(df: pd.DataFrame):
         <div class="kpi-card due-soon">
             <div class="kpi-value">{int(due_soon_count)}</div>
             <div class="kpi-label">Due in {DUE_SOON_DAYS} Days</div>
-        </div>
-        <div class="kpi-card" style="border-left-color: {HDL_THEME['ok']};">
-            <div class="kpi-value" style="color: {HDL_THEME['ok']};">{int(on_track_count)}</div>
-            <div class="kpi-label">On Track</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -983,41 +1484,41 @@ def render_job_card(job: pd.Series) -> str:
     stage = job["Stage"] or "Unknown"
     stage_badge = f'<span class="badge badge-stage">{stage}</span>'
 
-    # Format dates
+    # Format dates (check for NaT values)
     due_date_str = ""
-    if job["EstimatedDeliveryDate"]:
-        due_dt = job["EstimatedDeliveryDate"]
-        if hasattr(due_dt, 'strftime'):
-            due_date_str = f'ETD: {due_dt.strftime("%d %b %Y")}'
+    due_dt = job["EstimatedDeliveryDate"]
+    if pd.notna(due_dt) and hasattr(due_dt, 'strftime'):
+        due_date_str = f'ETD: {due_dt.strftime("%d %b %Y")}'
 
     created_str = ""
-    if job["CreatedDate"]:
-        created_dt = job["CreatedDate"]
-        if hasattr(created_dt, 'strftime'):
-            created_str = f'Created: {created_dt.strftime("%d %b %Y")}'
+    created_dt = job["CreatedDate"]
+    if pd.notna(created_dt) and hasattr(created_dt, 'strftime'):
+        created_str = f'Created: {created_dt.strftime("%d %b %Y")}'
 
-    # Escape text content
-    reference = str(job["Reference"] or "No Ref").replace("<", "&lt;").replace(">", "&gt;")
-    project = str(job["ProjectName"] or "").replace("<", "&lt;").replace(">", "&gt;")
-    company = str(job["Company"] or "").replace("<", "&lt;").replace(">", "&gt;")
+    # Escape text content for HTML
+    reference = str(job["Reference"] or "No Ref").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    project = str(job["ProjectName"] or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    company = str(job["Company"] or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
-    return f"""
-    <div class="job-card {card_class}">
-        <div class="job-reference">{reference}</div>
-        <div class="job-project" title="{project}">{project if project else '—'}</div>
-        <div class="job-company">{company if company else '—'}</div>
-        <div class="job-meta">
-            {status_badge}
-            {stage_badge}
-        </div>
-        <div class="job-date">
-            {due_date_str}
-        </div>
-        <div class="job-date">
-            {created_str}
-        </div>
-    </div>
-    """
+    # Get the Sales Order ID for the link
+    order_id = job["Id"]
+    cin7_url = f"{CIN7_WEB_URL_BASE}?idCustomerAppsLink={CIN7_CUSTOMER_APPS_LINK}&OrderId={order_id}" if order_id else "#"
+
+    # Build the card HTML as a clickable link
+    card_html = f'<a href="{cin7_url}" target="_blank" class="job-card-link">'
+    card_html += f'<div class="job-card {card_class}">'
+    card_html += f'<div class="job-reference">{reference}</div>'
+    card_html += f'<div class="job-project" title="{project}">{project if project else "—"}</div>'
+    card_html += f'<div class="job-company">{company if company else "—"}</div>'
+    card_html += f'<div class="job-meta">{status_badge}{stage_badge}</div>'
+    if due_date_str:
+        card_html += f'<div class="job-date">{due_date_str}</div>'
+    if created_str:
+        card_html += f'<div class="job-date">{created_str}</div>'
+    card_html += '</div>'
+    card_html += '</a>'
+
+    return card_html
 
 
 def render_board_column(title: str, emoji: str, jobs_df: pd.DataFrame, column_class: str):
@@ -1076,7 +1577,7 @@ def render_currently_working_on(df: pd.DataFrame):
     <div class="working-on-section">
         <div class="working-on-header">
             <span class="working-on-title">
-                🔨 Currently Working On
+                🔧 Currently in Workshop
             </span>
             <span class="working-on-count">
                 {count}
@@ -1089,38 +1590,305 @@ def render_currently_working_on(df: pd.DataFrame):
     """, unsafe_allow_html=True)
 
 
+def render_overdue(df: pd.DataFrame):
+    """Render the 'Overdue' section for jobs past their ETD."""
+    overdue_df = df[df["IsOverdue"]]
+
+    if overdue_df.empty:
+        return
+
+    # Sort by days overdue (most overdue first)
+    overdue_df = overdue_df.sort_values(by=["DaysOverdue"], ascending=False)
+
+    count = len(overdue_df)
+
+    # Build cards HTML
+    cards_html = ""
+    for _, job in overdue_df.iterrows():
+        cards_html += render_job_card(job)
+
+    st.markdown(f"""
+    <div class="overdue-section">
+        <div class="overdue-header">
+            <span class="overdue-title">
+                🚨 Overdue
+            </span>
+            <span class="overdue-count">
+                {count}
+            </span>
+        </div>
+        <div class="overdue-cards">
+            {cards_html}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_needs_etd(df: pd.DataFrame):
+    """Render the 'Needs ETD' section for jobs without an estimated delivery date."""
+    # Jobs with no ETD are those that are not overdue, not due soon, and not on track
+    no_etd_df = df[~df["IsOverdue"] & ~df["IsDueSoon"] & ~df["IsOnTrack"]]
+
+    if no_etd_df.empty:
+        return
+
+    # Sort by created date (oldest first - they need attention)
+    no_etd_df = no_etd_df.sort_values(by=["CreatedDate"], ascending=True)
+
+    count = len(no_etd_df)
+
+    # Build cards HTML
+    cards_html = ""
+    for _, job in no_etd_df.iterrows():
+        cards_html += render_job_card(job)
+
+    st.markdown(f"""
+    <div class="needs-etd-section">
+        <div class="needs-etd-header">
+            <span class="needs-etd-title">
+                📅 Needs ETD
+            </span>
+            <span class="needs-etd-count">
+                {count}
+            </span>
+        </div>
+        <div class="needs-etd-cards">
+            {cards_html}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_board(df: pd.DataFrame):
-    """Render the main board with Currently Working On section and four columns."""
+    """Render the main board with highlighted sections and two columns."""
     if df.empty:
         st.info("No active jobs found for Locksmiths workshop.")
         return
 
-    # Render "Currently Working On" section first (Processing stage jobs)
+    # Render "Currently in Workshop" section first - GREEN (Processing stage jobs)
     render_currently_working_on(df)
 
-    # For the main columns, exclude Processing jobs (they're shown above)
+    # Render "Overdue" section - RED (most urgent)
+    render_overdue(df)
+
+    # Render "Needs ETD" section - GRAY (jobs without estimated delivery dates)
+    render_needs_etd(df)
+
+    # For the main column, exclude Processing jobs and Overdue jobs (shown in dedicated sections above)
     non_processing_df = df[df["Stage"] != "Processing"]
+    # Also exclude overdue (shown in red section above)
+    non_processing_df = non_processing_df[~non_processing_df["IsOverdue"]]
 
-    # Split data into categories
-    overdue_df = non_processing_df[non_processing_df["IsOverdue"]].sort_values("DaysOverdue", ascending=False)
+    # Get due soon jobs
     due_soon_df = non_processing_df[non_processing_df["IsDueSoon"]].sort_values("EstimatedDeliveryDate")
-    on_track_df = non_processing_df[non_processing_df["IsOnTrack"]].sort_values("EstimatedDeliveryDate")
-    no_date_df = non_processing_df[~non_processing_df["IsOverdue"] & ~non_processing_df["IsDueSoon"] & ~non_processing_df["IsOnTrack"]].sort_values("CreatedDate", ascending=False)
 
-    # Render columns
-    col1, col2, col3, col4 = st.columns(4)
+    # Render single column for Jobs in Queue (due within 7 days)
+    render_board_column("Jobs in Queue", "🟠", due_soon_df, "column-due-soon")
 
-    with col1:
-        render_board_column("Overdue", "🔴", overdue_df, "column-overdue")
 
-    with col2:
-        render_board_column(f"Due Soon ({DUE_SOON_DAYS}d)", "🟡", due_soon_df, "column-due-soon")
+# =============================================================================
+# TV VIEW COMPONENTS
+# =============================================================================
 
-    with col3:
-        render_board_column("On Track", "🟢", on_track_df, "column-on-track")
+def render_tv_header():
+    """Render the TV view header with logo, title and time - compact for TV."""
+    tz = pytz.timezone(TIMEZONE_DISPLAY)
+    now = datetime.now(tz)
 
-    with col4:
-        render_board_column("No ETD", "⚪", no_date_df, "column-no-date")
+    # Try to load the logo
+    import base64
+    import os
+
+    logo_html = ""
+    logo_path = "Logos-01.jpg"
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            logo_data = base64.b64encode(f.read()).decode()
+        logo_html = '<img src="data:image/jpeg;base64,' + logo_data + '" class="tv-logo" alt="HDL">'
+
+    time_str = now.strftime('%H:%M')
+    date_str = now.strftime('%A, %d %b')
+
+    header_html = '<div class="tv-header">'
+    header_html += '<div class="tv-header-left">'
+    header_html += logo_html
+    header_html += '<h1 class="tv-title">Workshop Board</h1>'
+    header_html += '</div>'
+    header_html += '<div>'
+    header_html += '<div class="tv-time">' + time_str + '</div>'
+    header_html += '<div class="tv-date">' + date_str + '</div>'
+    header_html += '</div>'
+    header_html += '</div>'
+
+    st.markdown(header_html, unsafe_allow_html=True)
+
+
+def render_tv_kpi_cards(df: pd.DataFrame):
+    """Render compact horizontal KPI cards for TV display."""
+    if df.empty:
+        overdue_count = 0
+        queue_count = 0
+        workshop_count = 0
+    else:
+        overdue_count = int(df["IsOverdue"].sum())
+        queue_count = int(df["IsDueSoon"].sum())
+        workshop_count = int((df["Stage"] == "Processing").sum())
+
+    st.markdown(f"""
+    <div class="tv-kpi-container">
+        <div class="tv-kpi-card overdue">
+            <div class="tv-kpi-value">{overdue_count}</div>
+            <div class="tv-kpi-label">OVERDUE</div>
+        </div>
+        <div class="tv-kpi-card workshop">
+            <div class="tv-kpi-value">{workshop_count}</div>
+            <div class="tv-kpi-label">IN WORKSHOP</div>
+        </div>
+        <div class="tv-kpi-card queue">
+            <div class="tv-kpi-value">{queue_count}</div>
+            <div class="tv-kpi-label">IN QUEUE</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_tv_job_card(job: pd.Series) -> str:
+    """Render a single job card for TV display (larger text, no hover effects)."""
+    import html
+
+    # Determine card class and date styling
+    if job["IsOverdue"]:
+        card_class = "overdue"
+        date_class = "overdue"
+    elif job["IsDueSoon"]:
+        card_class = "due-soon"
+        date_class = "due-soon"
+    else:
+        card_class = "on-track"
+        date_class = "on-track"
+
+    # Format due date
+    due_date_str = ""
+    due_dt = job["EstimatedDeliveryDate"]
+    if pd.notna(due_dt) and hasattr(due_dt, 'strftime'):
+        due_date_str = due_dt.strftime("%d %b")
+        if job["IsOverdue"]:
+            days = int(job["DaysOverdue"])
+            due_date_str = str(days) + "d OVERDUE"
+        elif job["IsDueSoon"]:
+            # Calculate days until due
+            tz = pytz.timezone(TIMEZONE_DISPLAY)
+            today = datetime.now(tz).date()
+            if hasattr(due_dt, 'date'):
+                days_until = (due_dt.date() - today).days
+                due_date_str = "Due in " + str(days_until) + "d"
+
+    # Escape ALL text content properly using html.escape
+    reference = html.escape(str(job["Reference"] or "No Ref"))
+    project = html.escape(str(job["ProjectName"] or ""))
+    company = html.escape(str(job["Company"] or ""))
+
+    # Build HTML using concatenation to avoid f-string issues
+    card_html = '<div class="tv-job-card ' + card_class + '">'
+    card_html += '<div class="tv-job-reference">' + reference + '</div>'
+    card_html += '<div class="tv-job-project">' + (project if project else "—") + '</div>'
+    card_html += '<div class="tv-job-company">' + (company if company else "—") + '</div>'
+    card_html += '<div class="tv-job-date ' + date_class + '">' + due_date_str + '</div>'
+    card_html += '</div>'
+
+    return card_html
+
+
+def render_tv_column_cards(jobs_df: pd.DataFrame, max_cards: int = 6) -> str:
+    """Render job cards for a TV column, limiting to max_cards to fit screen."""
+    if jobs_df.empty:
+        return '<div class="tv-empty">No jobs</div>'
+
+    cards_html = ""
+    total_jobs = len(jobs_df)
+    display_jobs = jobs_df.head(max_cards)
+
+    for _, job in display_jobs.iterrows():
+        cards_html += render_tv_job_card(job)
+
+    # Show indicator if there are more jobs
+    if total_jobs > max_cards:
+        remaining = total_jobs - max_cards
+        cards_html += '<div class="tv-more-jobs">+ ' + str(remaining) + ' more</div>'
+
+    return cards_html
+
+
+def render_tv_board(df: pd.DataFrame):
+    """Render the full TV board as a 3-column grid layout for 50" TV."""
+    # Get overdue jobs (most urgent)
+    overdue_df = df[df["IsOverdue"]].sort_values("DaysOverdue", ascending=False) if not df.empty else pd.DataFrame()
+
+    # Get jobs currently being worked on (Processing stage)
+    processing_df = df[df["Stage"] == "Processing"].sort_values("EstimatedDeliveryDate") if not df.empty else pd.DataFrame()
+
+    # Get jobs in queue (due soon, not overdue, not processing)
+    if not df.empty:
+        non_processing = df[df["Stage"] != "Processing"]
+        non_overdue = non_processing[~non_processing["IsOverdue"]]
+        queue_df = non_overdue[non_overdue["IsDueSoon"]].sort_values("EstimatedDeliveryDate")
+    else:
+        queue_df = pd.DataFrame()
+
+    # Build the 3-column grid
+    # Show up to 7 cards per column - optimized for 50" TV
+    overdue_cards = render_tv_column_cards(overdue_df, max_cards=7)
+    workshop_cards = render_tv_column_cards(processing_df, max_cards=7)
+    queue_cards = render_tv_column_cards(queue_df, max_cards=7)
+
+    overdue_count = len(overdue_df)
+    workshop_count = len(processing_df)
+    queue_count = len(queue_df)
+
+    st.markdown(f'''
+    <div class="tv-board">
+        <div class="tv-section overdue">
+            <div class="tv-section-header">
+                <span class="tv-section-title">OVERDUE</span>
+                <span class="tv-section-count">{overdue_count}</span>
+            </div>
+            <div class="tv-cards-column">
+                {overdue_cards}
+            </div>
+        </div>
+        <div class="tv-section workshop">
+            <div class="tv-section-header">
+                <span class="tv-section-title">IN WORKSHOP</span>
+                <span class="tv-section-count">{workshop_count}</span>
+            </div>
+            <div class="tv-cards-column">
+                {workshop_cards}
+            </div>
+        </div>
+        <div class="tv-section queue">
+            <div class="tv-section-header">
+                <span class="tv-section-title">COMING UP</span>
+                <span class="tv-section-count">{queue_count}</span>
+            </div>
+            <div class="tv-cards-column">
+                {queue_cards}
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+
+
+def render_tv_view(df: pd.DataFrame):
+    """Main TV view render function optimized for 50" TV display.
+
+    Designed for wall-mounted TV displays in the workshop.
+    Uses large fonts and high contrast for readability from a distance.
+    """
+
+    # Render TV components directly (container styling applied via CSS)
+    render_tv_header()
+    render_tv_kpi_cards(df)
+    render_tv_board(df)
 
 
 def render_data_table(df: pd.DataFrame):
@@ -1201,7 +1969,6 @@ def test_api_connection() -> bool:
 def main():
     """Main application entry point."""
     inject_custom_css()
-    render_header()
 
     # Test API connection first (in debug mode)
     if DEBUG_MODE:
@@ -1217,104 +1984,128 @@ def main():
             """)
             st.stop()
 
-    # Show current filter info
-    st.markdown(f"""
-    <div class="info-box">
-        📍 <strong>Distribution Branch:</strong> {DISTRIBUTION_BRANCH_NAME} &nbsp;|&nbsp;
-        🕐 <strong>Timezone:</strong> {TIMEZONE_DISPLAY}
-    </div>
-    """, unsafe_allow_html=True)
+    # Create tabs for Desktop and TV views
+    tab_desktop, tab_tv = st.tabs(["🖥️ Desktop View", "📺 TV View"])
 
-    # Controls row
-    st.markdown('<div class="controls-row">', unsafe_allow_html=True)
+    # Fetch data once for both views (using default active stages)
+    all_stages = [
+        "New", "Processing", "Job Complete",  # Active workshop stages
+        "To Call", "To Collect", "Awaiting PO", "Awaiting Payment",
+        "Release To Pick", "Partially Picked", "Fully Picked",
+        "Fully Picked - Hold", "On Hold", "Ready to Invoice",
+        "Fully Dispatched", "Dispatched", "Cancelled"
+    ]
 
-    col1, col2, col3, col4 = st.columns([3, 2, 3, 1])
+    # =========================================================================
+    # DESKTOP VIEW TAB
+    # =========================================================================
+    with tab_desktop:
+        render_header()
 
-    with col1:
-        # Stages from Cin7 - only show workshop-relevant ones by default
-        all_stages = [
-            "New", "Processing", "Job Complete",  # Active workshop stages
-            "To Call", "To Collect", "Awaiting PO", "Awaiting Payment",
-            "Release To Pick", "Partially Picked", "Fully Picked",
-            "Fully Picked - Hold", "On Hold", "Ready to Invoice",
-            "Fully Dispatched", "Dispatched", "Cancelled"
-        ]
-        # Default to only active workshop stages
-        default_stages = ACTIVE_STAGES.copy()
+        # Show current filter info
+        st.markdown(f"""
+        <div class="info-box">
+            📍 <strong>Distribution Branch:</strong> {DISTRIBUTION_BRANCH_NAME} &nbsp;|&nbsp;
+            🕐 <strong>Timezone:</strong> {TIMEZONE_DISPLAY}
+        </div>
+        """, unsafe_allow_html=True)
 
-        selected_stages = st.multiselect(
-            "📊 Stages",
-            options=all_stages,
-            default=default_stages
-        )
+        # Controls row
+        st.markdown('<div class="controls-row">', unsafe_allow_html=True)
 
-    with col2:
-        show_upcoming_only = st.toggle(
-            f"Show only next {UPCOMING_DAYS} days",
-            value=False
-        )
+        col1, col2, col3, col4 = st.columns([3, 2, 3, 1])
 
-    with col3:
-        search_term = st.text_input(
-            "🔍 Search",
-            placeholder="Reference, Project, Company..."
-        )
+        with col1:
+            # Default to only active workshop stages
+            default_stages = ACTIVE_STAGES.copy()
 
-    with col4:
+            selected_stages = st.multiselect(
+                "📊 Stages",
+                options=all_stages,
+                default=default_stages
+            )
+
+        with col2:
+            show_upcoming_only = st.toggle(
+                f"Show only next {UPCOMING_DAYS} days",
+                value=False
+            )
+
+        with col3:
+            search_term = st.text_input(
+                "🔍 Search",
+                placeholder="Reference, Project, Company..."
+            )
+
+        with col4:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🔄 Refresh", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Determine excluded stages based on selection
+        excluded_stages = [s for s in all_stages if s not in selected_stages]
+
+        # Fetch data for desktop view
+        with st.spinner(f"Loading {DISTRIBUTION_BRANCH_NAME} workshop data..."):
+            df = fetch_sales_orders(tuple(excluded_stages))
+
+        # Apply search filter
+        if search_term and not df.empty:
+            search_lower = search_term.lower()
+            mask = (
+                df["Reference"].str.lower().str.contains(search_lower, na=False) |
+                df["ProjectName"].str.lower().str.contains(search_lower, na=False) |
+                df["Company"].str.lower().str.contains(search_lower, na=False)
+            )
+            df = df[mask]
+
+        # Apply upcoming filter
+        if show_upcoming_only and not df.empty:
+            tz = pytz.timezone(TIMEZONE_DISPLAY)
+            today = datetime.now(tz).date()
+            cutoff = today + timedelta(days=UPCOMING_DAYS)
+
+            mask = df["EstimatedDeliveryDate"].apply(
+                lambda x: x is not None and hasattr(x, 'date') and x.date() <= cutoff
+            ) | df["EstimatedDeliveryDate"].isna()
+            df = df[mask]
+
+        # Render KPIs
+        render_kpi_cards(df)
+
+        # Render board
+        render_board(df)
+
+        # Spacer
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Refresh", use_container_width=True):
-            st.cache_data.clear()
-            st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Render data table
+        render_data_table(df)
 
-    # Determine excluded stages based on selection
-    excluded_stages = [s for s in all_stages if s not in selected_stages]
+        # Footer info
+        st.markdown(f"""
+        <div style="text-align: center; color: #6C757D; font-size: 0.8rem; margin-top: 2rem; padding: 1rem;">
+            HDL Workshop Capacity Board v1.0 | Timezone: {TIMEZONE_DISPLAY} |
+            Data cached for 5 minutes
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Fetch data
-    with st.spinner(f"Loading {DISTRIBUTION_BRANCH_NAME} workshop data..."):
-        df = fetch_sales_orders(tuple(excluded_stages))
+    # =========================================================================
+    # TV VIEW TAB
+    # =========================================================================
+    with tab_tv:
+        # TV view uses default active stages only, no filters
+        excluded_stages_tv = [s for s in all_stages if s not in ACTIVE_STAGES]
 
-    # Apply search filter
-    if search_term and not df.empty:
-        search_lower = search_term.lower()
-        mask = (
-            df["Reference"].str.lower().str.contains(search_lower, na=False) |
-            df["ProjectName"].str.lower().str.contains(search_lower, na=False) |
-            df["Company"].str.lower().str.contains(search_lower, na=False)
-        )
-        df = df[mask]
+        # Fetch data for TV view
+        with st.spinner("Loading workshop data..."):
+            df_tv = fetch_sales_orders(tuple(excluded_stages_tv))
 
-    # Apply upcoming filter
-    if show_upcoming_only and not df.empty:
-        tz = pytz.timezone(TIMEZONE_DISPLAY)
-        today = datetime.now(tz).date()
-        cutoff = today + timedelta(days=UPCOMING_DAYS)
-
-        mask = df["EstimatedDeliveryDate"].apply(
-            lambda x: x is not None and hasattr(x, 'date') and x.date() <= cutoff
-        ) | df["EstimatedDeliveryDate"].isna()
-        df = df[mask]
-
-    # Render KPIs
-    render_kpi_cards(df)
-
-    # Render board
-    render_board(df)
-
-    # Spacer
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Render data table
-    render_data_table(df)
-
-    # Footer info
-    st.markdown(f"""
-    <div style="text-align: center; color: #6C757D; font-size: 0.8rem; margin-top: 2rem; padding: 1rem;">
-        HDL Workshop Capacity Board v1.0 | Timezone: {TIMEZONE_DISPLAY} |
-        Data cached for 5 minutes
-    </div>
-    """, unsafe_allow_html=True)
+        # Render the TV view
+        render_tv_view(df_tv)
 
 
 if __name__ == "__main__":
