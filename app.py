@@ -1025,39 +1025,15 @@ def inject_custom_css():
 # AUTO-REFRESH FUNCTIONS
 # =============================================================================
 
-def check_periodic_refresh():
+def setup_auto_refresh():
     """
-    Check if we should trigger a periodic refresh based on AUTO_REFRESH_HOURS.
-    Uses session state to track when the last refresh was triggered.
+    Set up a meta refresh tag to reload the page after the configured interval.
+    This is a simple browser-based refresh - no intermediate API calls.
     """
-    tz = pytz.timezone(TIMEZONE_DISPLAY)
-    now = datetime.now(tz)
-
-    # Initialize session state for tracking refresh
-    if 'last_refresh_time' not in st.session_state:
-        st.session_state.last_refresh_time = now
-
-    # Calculate hours since last refresh
-    time_since_refresh = now - st.session_state.last_refresh_time
-    hours_since_refresh = time_since_refresh.total_seconds() / 3600
-
-    # Check if enough time has passed for a refresh
-    if hours_since_refresh >= AUTO_REFRESH_HOURS:
-        # Update the last refresh time
-        st.session_state.last_refresh_time = now
-        # Clear the cache to force fresh data
-        st.cache_data.clear()
-        st.rerun()
-
-
-def setup_auto_refresh_check():
-    """
-    Set up a meta refresh tag to periodically check if it's time for a refresh.
-    This ensures the page checks every few minutes even if left open.
-    """
-    # Refresh the page every 5 minutes to check if refresh interval has passed
+    # Convert hours to seconds for the meta refresh
+    refresh_seconds = AUTO_REFRESH_HOURS * 60 * 60  # 12 hours = 43200 seconds
     st.markdown(
-        '<meta http-equiv="refresh" content="300">',
+        f'<meta http-equiv="refresh" content="{refresh_seconds}">',
         unsafe_allow_html=True
     )
 
@@ -2015,11 +1991,8 @@ def main():
     """Main application entry point."""
     inject_custom_css()
 
-    # Set up auto-refresh check (page will refresh every 5 minutes to check interval)
-    setup_auto_refresh_check()
-
-    # Check if it's time for a periodic refresh (every 12 hours)
-    check_periodic_refresh()
+    # Set up auto-refresh (page will refresh once every 12 hours)
+    setup_auto_refresh()
 
     # Test API connection first (in debug mode)
     if DEBUG_MODE:
