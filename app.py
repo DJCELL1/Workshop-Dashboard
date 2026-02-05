@@ -927,16 +927,20 @@ def inject_custom_css():
         .tv-board {{
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+            gap: 0.75rem;
             flex: 1;
+            width: 100%;
+            overflow: hidden;
         }}
 
         /* TV Section/Column */
         .tv-section {{
             border-radius: 16px;
-            padding: 1rem;
+            padding: 0.75rem;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
         }}
 
         .tv-section.overdue {{
@@ -959,21 +963,23 @@ def inject_custom_css():
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
         }}
 
         .tv-section-title {{
             color: white;
-            font-size: 1.6rem;
+            font-size: 1.2rem;
             font-weight: 700;
+            white-space: nowrap;
         }}
 
         .tv-section-count {{
             background: white;
             color: {HDL_THEME['primary']};
-            padding: 0.4rem 1rem;
+            padding: 0.25rem 0.75rem;
             border-radius: 20px;
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }}
 
@@ -998,37 +1004,43 @@ def inject_custom_css():
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            overflow: hidden;
+            flex: 1;
         }}
 
-        /* TV Job Cards - Fixed size, readable from distance */
+        /* TV Job Cards - Fill width, fixed height */
         .tv-job-card {{
             background: white;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            height: 120px;
+            border-radius: 10px;
+            padding: 0.6rem 0.75rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            height: 100px;
+            min-height: 100px;
+            max-height: 100px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
         }}
 
         .tv-job-card.overdue {{
-            border-left: 6px solid {HDL_THEME['overdue']};
+            border-left: 5px solid {HDL_THEME['overdue']};
         }}
 
         .tv-job-card.due-soon {{
-            border-left: 6px solid {HDL_THEME['accent']};
+            border-left: 5px solid {HDL_THEME['accent']};
         }}
 
         .tv-job-card.on-track {{
-            border-left: 6px solid {HDL_THEME['ok']};
+            border-left: 5px solid {HDL_THEME['ok']};
         }}
 
         .tv-job-reference {{
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: {HDL_THEME['primary']};
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.15rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1036,7 +1048,7 @@ def inject_custom_css():
         }}
 
         .tv-job-project {{
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: {HDL_THEME['text']};
             white-space: nowrap;
@@ -1046,7 +1058,7 @@ def inject_custom_css():
         }}
 
         .tv-job-company {{
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: {HDL_THEME['textLight']};
             white-space: nowrap;
             overflow: hidden;
@@ -1055,12 +1067,13 @@ def inject_custom_css():
         }}
 
         .tv-job-date {{
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 700;
-            padding: 0.3rem 0.75rem;
-            border-radius: 6px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
             display: inline-block;
             margin-top: auto;
+            align-self: flex-start;
         }}
 
         .tv-job-date.overdue {{
