@@ -352,7 +352,7 @@ def inject_custom_css():
         }}
 
         .overdue-cards .job-card {{
-            flex: 0 0 280px;
+            flex: 0 0 260px;
             margin-bottom: 0;
         }}
 
@@ -411,7 +411,7 @@ def inject_custom_css():
         }}
 
         .needs-etd-cards .job-card {{
-            flex: 0 0 280px;
+            flex: 0 0 260px;
             margin-bottom: 0;
         }}
 
@@ -470,7 +470,7 @@ def inject_custom_css():
         }}
 
         .to-collect-cards .job-card {{
-            flex: 0 0 280px;
+            flex: 0 0 260px;
             margin-bottom: 0;
         }}
 
@@ -521,7 +521,7 @@ def inject_custom_css():
         }}
 
         .working-on-cards .job-card {{
-            flex: 0 0 280px;
+            flex: 0 0 260px;
             margin-bottom: 0;
         }}
 
@@ -536,7 +536,7 @@ def inject_custom_css():
             text-decoration: none;
         }}
 
-        /* Job cards - Fixed height for consistency */
+        /* Job cards - Fixed size for consistency */
         .job-card {{
             background: {HDL_THEME['card']};
             border: 1px solid #E9ECEF;
@@ -546,6 +546,9 @@ def inject_custom_css():
             transition: transform 0.15s, box-shadow 0.15s;
             cursor: pointer;
             height: 160px;
+            width: 260px;
+            min-width: 260px;
+            max-width: 260px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
