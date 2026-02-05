@@ -41,12 +41,12 @@ HDL_THEME = {
 
 # Stages we WANT to see (jobs in progress)
 # Once "Fully Dispatched" - job is complete and removed from board
-ACTIVE_STAGES = ['New', 'Processing', 'Job Complete']
+ACTIVE_STAGES = ['New', 'Processing', 'Job Complete', 'To Collect']
 
 # Stages to exclude (completed/cancelled work)
 ACTIVE_EXCLUDED_STAGES = [
     'Fully Dispatched', 'Dispatched', 'Cancelled', 'Declined',
-    'To Call', 'To Collect', 'Awaiting PO', 'Awaiting Payment',
+    'To Call', 'Awaiting PO', 'Awaiting Payment',
     'Release To Pick', 'Partially Picked', 'Fully Picked',
     'Fully Picked - Hold', 'On Hold', 'Ready to Invoice',
     'Release To Pick - WMS', 'Ready To Pack - WMS'
@@ -411,6 +411,65 @@ def inject_custom_css():
         }}
 
         .needs-etd-cards .job-card {{
+            flex: 0 0 280px;
+            margin-bottom: 0;
+        }}
+
+        /* To Collect section - Purple */
+        .to-collect-section {{
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .to-collect-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }}
+
+        .to-collect-title {{
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+
+        .to-collect-count {{
+            background: white;
+            color: #6f42c1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }}
+
+        .to-collect-cards {{
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }}
+
+        .to-collect-cards::-webkit-scrollbar {{
+            height: 6px;
+        }}
+
+        .to-collect-cards::-webkit-scrollbar-track {{
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }}
+
+        .to-collect-cards::-webkit-scrollbar-thumb {{
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+        }}
+
+        .to-collect-cards .job-card {{
             flex: 0 0 280px;
             margin-bottom: 0;
         }}
@@ -804,6 +863,10 @@ def inject_custom_css():
             border-bottom-color: {HDL_THEME['ok']};
         }}
 
+        .tv-kpi-card.to-collect {{
+            border-bottom-color: #6f42c1;
+        }}
+
         .tv-kpi-value {{
             font-size: 4rem;
             font-weight: 800;
@@ -822,6 +885,10 @@ def inject_custom_css():
             color: {HDL_THEME['ok']};
         }}
 
+        .tv-kpi-card.to-collect .tv-kpi-value {{
+            color: #6f42c1;
+        }}
+
         .tv-kpi-label {{
             font-size: 1.2rem;
             font-weight: 600;
@@ -831,10 +898,10 @@ def inject_custom_css():
             margin-top: 0.25rem;
         }}
 
-        /* TV Board - 3 column grid layout */
+        /* TV Board - 4 column grid layout */
         .tv-board {{
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             flex: 1;
         }}
@@ -853,6 +920,10 @@ def inject_custom_css():
 
         .tv-section.workshop {{
             background: linear-gradient(135deg, {HDL_THEME['ok']} 0%, #3d8a8a 100%);
+        }}
+
+        .tv-section.to-collect {{
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
         }}
 
         .tv-section.queue {{
@@ -891,6 +962,10 @@ def inject_custom_css():
 
         .tv-section.queue .tv-section-count {{
             color: {HDL_THEME['accent']};
+        }}
+
+        .tv-section.to-collect .tv-section-count {{
+            color: #6f42c1;
         }}
 
         /* TV Cards container - vertical stack */
@@ -1680,6 +1755,43 @@ def render_needs_etd(df: pd.DataFrame):
     """, unsafe_allow_html=True)
 
 
+def render_to_collect(df: pd.DataFrame):
+    """Render the 'To Collect' section for jobs ready for customer pickup."""
+    to_collect_df = df[df["Stage"] == "To Collect"]
+
+    if to_collect_df.empty:
+        return
+
+    # Sort by ETD (earliest first), then by created date
+    to_collect_df = to_collect_df.sort_values(
+        by=["EstimatedDeliveryDate", "CreatedDate"],
+        ascending=[True, True]
+    )
+
+    count = len(to_collect_df)
+
+    # Build cards HTML
+    cards_html = ""
+    for _, job in to_collect_df.iterrows():
+        cards_html += render_job_card(job)
+
+    st.markdown(f"""
+    <div class="to-collect-section">
+        <div class="to-collect-header">
+            <span class="to-collect-title">
+                📦 To Collect
+            </span>
+            <span class="to-collect-count">
+                {count}
+            </span>
+        </div>
+        <div class="to-collect-cards">
+            {cards_html}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_board(df: pd.DataFrame):
     """Render the main board with highlighted sections and two columns."""
     if df.empty:
@@ -1689,14 +1801,17 @@ def render_board(df: pd.DataFrame):
     # Render "Currently in Workshop" section first - GREEN (Processing stage jobs)
     render_currently_working_on(df)
 
+    # Render "To Collect" section - PURPLE (jobs ready for customer pickup)
+    render_to_collect(df)
+
     # Render "Overdue" section - RED (most urgent)
     render_overdue(df)
 
     # Render "Needs ETD" section - GRAY (jobs without estimated delivery dates)
     render_needs_etd(df)
 
-    # For the main column, exclude Processing jobs and Overdue jobs (shown in dedicated sections above)
-    non_processing_df = df[df["Stage"] != "Processing"]
+    # For the main column, exclude Processing jobs, To Collect jobs, and Overdue jobs (shown in dedicated sections above)
+    non_processing_df = df[(df["Stage"] != "Processing") & (df["Stage"] != "To Collect")]
     # Also exclude overdue (shown in red section above)
     non_processing_df = non_processing_df[~non_processing_df["IsOverdue"]]
 
@@ -1750,10 +1865,12 @@ def render_tv_kpi_cards(df: pd.DataFrame):
         overdue_count = 0
         queue_count = 0
         workshop_count = 0
+        to_collect_count = 0
     else:
         overdue_count = int(df["IsOverdue"].sum())
         queue_count = int(df["IsDueSoon"].sum())
         workshop_count = int((df["Stage"] == "Processing").sum())
+        to_collect_count = int((df["Stage"] == "To Collect").sum())
 
     st.markdown(f"""
     <div class="tv-kpi-container">
@@ -1764,6 +1881,10 @@ def render_tv_kpi_cards(df: pd.DataFrame):
         <div class="tv-kpi-card workshop">
             <div class="tv-kpi-value">{workshop_count}</div>
             <div class="tv-kpi-label">IN WORKSHOP</div>
+        </div>
+        <div class="tv-kpi-card to-collect">
+            <div class="tv-kpi-value">{to_collect_count}</div>
+            <div class="tv-kpi-label">TO COLLECT</div>
         </div>
         <div class="tv-kpi-card queue">
             <div class="tv-kpi-value">{queue_count}</div>
@@ -1841,29 +1962,34 @@ def render_tv_column_cards(jobs_df: pd.DataFrame, max_cards: int = 6) -> str:
 
 
 def render_tv_board(df: pd.DataFrame):
-    """Render the full TV board as a 3-column grid layout for 50" TV."""
+    """Render the full TV board as a 4-column grid layout for 50" TV."""
     # Get overdue jobs (most urgent)
     overdue_df = df[df["IsOverdue"]].sort_values("DaysOverdue", ascending=False) if not df.empty else pd.DataFrame()
 
     # Get jobs currently being worked on (Processing stage)
     processing_df = df[df["Stage"] == "Processing"].sort_values("EstimatedDeliveryDate") if not df.empty else pd.DataFrame()
 
-    # Get jobs in queue (due soon, not overdue, not processing)
+    # Get jobs ready for customer pickup (To Collect stage)
+    to_collect_df = df[df["Stage"] == "To Collect"].sort_values("EstimatedDeliveryDate") if not df.empty else pd.DataFrame()
+
+    # Get jobs in queue (due soon, not overdue, not processing, not to collect)
     if not df.empty:
-        non_processing = df[df["Stage"] != "Processing"]
-        non_overdue = non_processing[~non_processing["IsOverdue"]]
+        non_special = df[(df["Stage"] != "Processing") & (df["Stage"] != "To Collect")]
+        non_overdue = non_special[~non_special["IsOverdue"]]
         queue_df = non_overdue[non_overdue["IsDueSoon"]].sort_values("EstimatedDeliveryDate")
     else:
         queue_df = pd.DataFrame()
 
-    # Build the 3-column grid
-    # Show up to 7 cards per column - optimized for 50" TV
-    overdue_cards = render_tv_column_cards(overdue_df, max_cards=7)
-    workshop_cards = render_tv_column_cards(processing_df, max_cards=7)
-    queue_cards = render_tv_column_cards(queue_df, max_cards=7)
+    # Build the 4-column grid
+    # Show up to 6 cards per column - optimized for 50" TV with 4 columns
+    overdue_cards = render_tv_column_cards(overdue_df, max_cards=6)
+    workshop_cards = render_tv_column_cards(processing_df, max_cards=6)
+    to_collect_cards = render_tv_column_cards(to_collect_df, max_cards=6)
+    queue_cards = render_tv_column_cards(queue_df, max_cards=6)
 
     overdue_count = len(overdue_df)
     workshop_count = len(processing_df)
+    to_collect_count = len(to_collect_df)
     queue_count = len(queue_df)
 
     st.markdown(f'''
@@ -1884,6 +2010,15 @@ def render_tv_board(df: pd.DataFrame):
             </div>
             <div class="tv-cards-column">
                 {workshop_cards}
+            </div>
+        </div>
+        <div class="tv-section to-collect">
+            <div class="tv-section-header">
+                <span class="tv-section-title">TO COLLECT</span>
+                <span class="tv-section-count">{to_collect_count}</span>
+            </div>
+            <div class="tv-cards-column">
+                {to_collect_cards}
             </div>
         </div>
         <div class="tv-section queue">

@@ -7,6 +7,10 @@ The Workshop Capacity Board is a visual dashboard that displays all active Locks
 - Which jobs need ETD dates added
 - What's overdue, due soon, or on track
 
+The dashboard has two views:
+- **Desktop View** - Full-featured view with search, filters, and data export
+- **TV View** - Simplified 3-column view optimized for the workshop TV display
+
 ---
 
 ## For Order Entry (Deb & Sean)
@@ -63,24 +67,31 @@ The Workshop Board helps you see what needs to be worked on and track progress. 
 
 ### Understanding the Board Layout
 
-The board has several sections:
+The Desktop View has several highlighted sections displayed in order of priority:
 
-#### 🔨 Currently Working On
+#### 🔧 Currently in Workshop (Green Section)
 - Shows all jobs in **"Processing"** stage
 - This is what the workshop is actively working on right now
 - Scrolls horizontally if there are many jobs
 
-#### 📅 Needs ETD
+#### 📦 To Collect (Purple Section)
+- Shows all jobs in **"To Collect"** stage
+- These are completed jobs waiting for customer pickup
+- Scrolls horizontally if there are many jobs
+
+#### 🚨 Overdue (Red Section)
+- Shows all jobs past their ETD date
+- Sorted by most overdue first - needs urgent attention!
+- Scrolls horizontally if there are many jobs
+
+#### 📅 Needs ETD (Dark Section)
 - Shows jobs that don't have a due date set
 - These need Deb/Sean to add an ETD date
 - Sorted by oldest first (longest waiting)
 
-#### Kanban Columns
-| Column | Meaning |
-|--------|---------|
-| 🔴 **Overdue** | Past the ETD date - needs urgent attention |
-| 🟡 **Due Soon** | Due within 7 days |
-| 🟢 **On Track** | Due more than 7 days away |
+#### 🟠 Jobs in Queue
+- Shows jobs due within the next 7 days that are not yet in Processing
+- These are the upcoming jobs that should be worked on next
 
 ### Updating Job Status in Cin7
 
@@ -90,6 +101,7 @@ The board has several sections:
 
 ```
 New → Processing → Job Complete → Fully Dispatched
+                 ↘ To Collect → Fully Dispatched
 ```
 
 | Stage | When to Use |
@@ -97,7 +109,8 @@ New → Processing → Job Complete → Fully Dispatched
 | **New** | Order has been entered, not started yet |
 | **Processing** | You are actively working on this job |
 | **Job Complete** | Work is done, ready for dispatch |
-| **Fully Dispatched** | Job has been sent to customer (removes from board) |
+| **To Collect** | Work is done, customer will pick up (not for delivery) |
+| **Fully Dispatched** | Job has been sent/collected by customer (removes from board) |
 
 #### How to Update the Stage in Cin7
 
@@ -135,6 +148,8 @@ Each job card shows:
 - **ETD**: When it's due
 - **Created**: When the order was entered
 
+**Tip:** Click on any job card to open the Sales Order directly in Cin7!
+
 ### Colour Coding
 
 | Colour | Meaning |
@@ -150,7 +165,8 @@ Each job card shows:
 
 ### Refresh Data
 - Click the **🔄 Refresh** button to get the latest data from Cin7
-- Data is cached for 5 minutes, so you may not see immediate changes
+- Data is cached for 5 minutes to reduce API calls
+- The page auto-refreshes every 12 hours to keep data current
 
 ### Search
 - Use the search box to find specific jobs
@@ -166,6 +182,41 @@ Each job card shows:
 ### Export Data
 - Scroll down to the "Detailed View" section
 - Click **📥 Download CSV** to export the data to Excel
+
+---
+
+## TV View (Workshop Display)
+
+The TV View is designed for the workshop TV display. Switch to it by clicking the **📺 TV View** tab at the top of the dashboard.
+
+### TV View Features
+- **Large text** readable from across the workshop
+- **4-column layout** showing the most important information:
+  - **OVERDUE** (Red) - Jobs past their due date
+  - **IN WORKSHOP** (Green) - Jobs currently being worked on
+  - **TO COLLECT** (Purple) - Jobs ready for customer pickup
+  - **COMING UP** (Orange) - Jobs due within 7 days
+- **KPI cards** showing total counts at a glance
+- **Auto-refresh** keeps the display current
+
+### TV View Layout
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  [Logo] Workshop Board                                  10:30  Monday  │
+├────────────────────────────────────────────────────────────────────────┤
+│  OVERDUE: 2  │  IN WORKSHOP: 3  │  TO COLLECT: 1  │  IN QUEUE: 5      │
+├────────────────────────────────────────────────────────────────────────┤
+│   OVERDUE    │   IN WORKSHOP    │   TO COLLECT    │    COMING UP      │
+│ ┌──────────┐ │  ┌──────────┐    │  ┌──────────┐   │   ┌──────────┐    │
+│ │ Job Card │ │  │ Job Card │    │  │ Job Card │   │   │ Job Card │    │
+│ └──────────┘ │  └──────────┘    │  └──────────┘   │   └──────────┘    │
+│ ┌──────────┐ │  ┌──────────┐    │                 │   ┌──────────┐    │
+│ │ Job Card │ │  │ Job Card │    │                 │   │ Job Card │    │
+│ └──────────┘ │  └──────────┘    │                 │   └──────────┘    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+The TV view shows up to 6 jobs per column. If there are more jobs, a "+X more" indicator appears.
 
 ---
 
@@ -189,6 +240,12 @@ Each job card shows:
 ### Data seems outdated?
 - Click the **🔄 Refresh** button
 - Data is cached for 5 minutes to reduce API calls
+- The page auto-refreshes every 12 hours
+
+### Can't click on job cards to open Cin7?
+- Job cards link to Cin7 - clicking should open the Sales Order
+- Make sure pop-ups are enabled for the dashboard site
+- If on the TV View, cards are display-only (not clickable)
 
 ---
 
@@ -204,8 +261,9 @@ Each job card shows:
 | Action | What to Do |
 |--------|------------|
 | Starting a job | Change Stage to **Processing** |
-| Finished a job | Change Stage to **Job Complete** |
-| Job dispatched | Change Stage to **Fully Dispatched** |
+| Finished a job (for delivery) | Change Stage to **Job Complete** |
+| Finished a job (customer pickup) | Change Stage to **To Collect** |
+| Job dispatched/collected | Change Stage to **Fully Dispatched** |
 
 ---
 
@@ -215,4 +273,5 @@ If you have issues with the Workshop Board, contact the IT team.
 
 **Timezone:** Pacific/Auckland (NZ time)
 **Data Cache:** 5 minutes
-**Version:** 1.0
+**Auto-Refresh:** Every 12 hours
+**Version:** 1.2
