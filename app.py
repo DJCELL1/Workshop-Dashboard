@@ -536,7 +536,7 @@ def inject_custom_css():
             text-decoration: none;
         }}
 
-        /* Job cards */
+        /* Job cards - Fixed height for consistency */
         .job-card {{
             background: {HDL_THEME['card']};
             border: 1px solid #E9ECEF;
@@ -545,6 +545,10 @@ def inject_custom_css():
             margin-bottom: 0.75rem;
             transition: transform 0.15s, box-shadow 0.15s;
             cursor: pointer;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }}
 
         .job-card:hover {{
@@ -574,6 +578,10 @@ def inject_custom_css():
             color: {HDL_THEME['primary']};
             font-size: 0.95rem;
             margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .job-project {{
@@ -583,19 +591,25 @@ def inject_custom_css():
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .job-company {{
             color: {HDL_THEME['textLight']};
             font-size: 0.8rem;
             margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .job-meta {{
             display: flex;
             gap: 0.5rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             margin-bottom: 0.5rem;
+            flex-shrink: 0;
         }}
 
         .badge {{
@@ -639,10 +653,18 @@ def inject_custom_css():
             color: {HDL_THEME['text']};
         }}
 
+        .job-dates {{
+            margin-top: auto;
+            flex-shrink: 0;
+        }}
+
         .job-date {{
             font-size: 0.75rem;
             color: {HDL_THEME['textLight']};
-            margin-top: 0.25rem;
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }}
 
         /* Workload bar */
@@ -1603,14 +1625,16 @@ def render_job_card(job: pd.Series) -> str:
     # Build the card HTML as a clickable link
     card_html = f'<a href="{cin7_url}" target="_blank" class="job-card-link">'
     card_html += f'<div class="job-card {card_class}">'
-    card_html += f'<div class="job-reference">{reference}</div>'
+    card_html += f'<div class="job-reference" title="{reference}">{reference}</div>'
     card_html += f'<div class="job-project" title="{project}">{project if project else "—"}</div>'
-    card_html += f'<div class="job-company">{company if company else "—"}</div>'
+    card_html += f'<div class="job-company" title="{company}">{company if company else "—"}</div>'
     card_html += f'<div class="job-meta">{status_badge}{stage_badge}</div>'
+    card_html += '<div class="job-dates">'
     if due_date_str:
         card_html += f'<div class="job-date">{due_date_str}</div>'
     if created_str:
         card_html += f'<div class="job-date">{created_str}</div>'
+    card_html += '</div>'
     card_html += '</div>'
     card_html += '</a>'
 
