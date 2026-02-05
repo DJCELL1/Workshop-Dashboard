@@ -1000,12 +1000,16 @@ def inject_custom_css():
             gap: 0.5rem;
         }}
 
-        /* TV Job Cards - Readable from distance */
+        /* TV Job Cards - Fixed size, readable from distance */
         .tv-job-card {{
             background: white;
             border-radius: 12px;
             padding: 0.75rem 1rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }}
 
         .tv-job-card.overdue {{
@@ -1025,6 +1029,10 @@ def inject_custom_css():
             font-weight: 700;
             color: {HDL_THEME['primary']};
             margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .tv-job-project {{
@@ -1034,6 +1042,7 @@ def inject_custom_css():
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .tv-job-company {{
@@ -1042,6 +1051,7 @@ def inject_custom_css():
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-shrink: 0;
         }}
 
         .tv-job-date {{
@@ -1050,7 +1060,7 @@ def inject_custom_css():
             padding: 0.3rem 0.75rem;
             border-radius: 6px;
             display: inline-block;
-            margin-top: 0.4rem;
+            margin-top: auto;
         }}
 
         .tv-job-date.overdue {{
