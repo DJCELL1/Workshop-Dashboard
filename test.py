@@ -1,14 +1,19 @@
 """
-HDL Workshop Capacity Board
-===========================
-A production-ready Streamlit dashboard for visualizing Cin7 Omni Sales Orders
-as workshop jobs with capacity tracking and visual status indicators.
+HDL Workshop Capacity Board - TEST VERSION
+============================================
+Testing: Stage-based filtering using "Workshop -" prefixed stages
+instead of Distribution Branch filtering to avoid stock issues.
 
-v2.0 - Now uses "Workshop -" prefixed stages to identify workshop orders
-instead of Distribution Branch filtering, which caused stock allocation issues.
+Changes from app.py:
+1. ACTIVE_STAGES now uses 'Workshop - New', 'Workshop - Processing', etc.
+2. Removed Distribution Branch ID filtering (DISTRIBUTION_BRANCH_ID = None)
+3. Filter now uses stage name prefix "Workshop -" instead of DistributionBranchId
+4. All stage comparisons updated to use new Workshop stage names
+5. all_stages list updated to include new Workshop stages
+6. UI text updated to reflect stage-based filtering
 
 Author: HDL Engineering
-Version: 2.0.0
+Version: 2.0.0-test
 """
 
 import streamlit as st
@@ -2309,8 +2314,8 @@ def main():
         # Footer info
         st.markdown(f"""
         <div style="text-align: center; color: #6C757D; font-size: 0.8rem; margin-top: 2rem; padding: 1rem;">
-            HDL Workshop Capacity Board v2.0 | Timezone: {TIMEZONE_DISPLAY} |
-            Data cached for 5 minutes | Filtering by Workshop stages
+            HDL Workshop Capacity Board v2.0-test | Timezone: {TIMEZONE_DISPLAY} |
+            Data cached for 5 minutes | Filtering by Workshop stages (no Distribution Branch)
         </div>
         """, unsafe_allow_html=True)
 
