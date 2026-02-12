@@ -1510,13 +1510,17 @@ def process_orders_dataframe(orders: List[Dict]) -> pd.DataFrame:
 
 def parse_date(date_value: Any) -> Optional[datetime]:
     """
-    Parse various date formats into datetime.
+    Parse various date formats into datetime, converting UTC to NZ time.
+
+    Cin7 stores dates in NZT but the API returns them serialized as UTC.
+    This means a date like "2 Jan NZT" becomes "1 Jan 11:00 UTC" in the API.
+    We must convert back to NZ time so the date component matches Cin7.
 
     Args:
         date_value: Date string or value from API
 
     Returns:
-        Parsed datetime or None
+        Parsed datetime in NZ timezone, or None
     """
     if date_value is None:
         return None
@@ -1526,6 +1530,9 @@ def parse_date(date_value: Any) -> Optional[datetime]:
 
     if not isinstance(date_value, str):
         return None
+
+    # Detect if the original string had a UTC timezone indicator
+    has_utc_indicator = "+00:00" in date_value or date_value.endswith("Z") or "T" in date_value
 
     date_formats = [
         "%Y-%m-%dT%H:%M:%S",
@@ -1537,9 +1544,16 @@ def parse_date(date_value: Any) -> Optional[datetime]:
         "%m/%d/%Y",
     ]
 
+    nz_tz = pytz.timezone(TIMEZONE_DISPLAY)
+
     for fmt in date_formats:
         try:
-            return datetime.strptime(date_value.replace("+00:00", "").replace("Z", ""), fmt.replace("Z", ""))
+            naive_dt = datetime.strptime(date_value.replace("+00:00", "").replace("Z", ""), fmt.replace("Z", ""))
+            # If the API sent a UTC indicator, treat as UTC and convert to NZ time
+            if has_utc_indicator:
+                utc_dt = pytz.utc.localize(naive_dt)
+                return utc_dt.astimezone(nz_tz)
+            return naive_dt
         except ValueError:
             continue
 
